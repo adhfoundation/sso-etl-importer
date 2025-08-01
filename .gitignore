@@ -1,0 +1,10 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/src/generated/prisma
+
+node_modules/*
+apoio-local/*
+src/files/output/*
+src/files/input/*
