@@ -2,8 +2,6 @@ import { AppFacade } from "./App.facade";
 
 import { MainApp } from "@app/MainApp";
 import { AppFlags } from "@utils/flags";
-import { CsvBatchStrategy } from "./strategies/CsvBatchStrategy";
-import { JsonBatchStrategy } from "./strategies/JsonBatchStrategy";
 
 export class AppController {
   constructor(

@@ -92,7 +92,7 @@ export class UserImporter {
           });
   
           await this.logger.log(
-            "success",
+            "IMPORT-USER-BATCH--TO-DB--SUCCESS",
             `Usuário criado: ${user.username || user.primaryEmail}`,
             user.log.indexRegister,
             user.log.file,
@@ -110,7 +110,7 @@ export class UserImporter {
             );
           } else {
             await this.logger.log(
-              "error",
+              "IMPORT-USER-BATCH--TO-DB--ERROR",
               `Erro ao criar ${user.username || user.primaryEmail}: ${err.message}`,
               user.log.indexRegister,
               user.log.file,

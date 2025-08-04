@@ -2,7 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import { UUID } from "crypto";
 
-type LogType = "success" | "ignored" | "error";
+type LogType = "success" | "ignored" | "error" | "IMPORT-USER-BATCH--TO-DB--SUCCESS" | "IMPORT-USER-BATCH--TO-DB--ERROR";
 
 export class ImportLoggerService {
   constructor(private prisma: PrismaClient) {}
@@ -27,11 +27,11 @@ export class ImportLoggerService {
     }
     await this.prisma.logto_import_log.create({ data });
 
-    const prefix = {
-      success: "✅",
-      ignored: "⚠️",
-      error: "❌",
-    }[type];
+    // const prefix = {
+    //   success: "✅",
+    //   ignored: "⚠️",
+    //   error: "❌",
+    // }[type];
 
     // console.log(`${prefix} ${message} - register: ${indexRegister}`);
   }

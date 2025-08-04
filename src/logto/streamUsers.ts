@@ -56,7 +56,7 @@ export class UserStreamer {
       data: {
         user_id: userId,
         type: "IMPORT-VALIDATION_ERROR--to-LogTo",
-        message: errors.join("; "),
+        message: [`[userId: ${userId}]`].concat(errors).join("; "),
         created_at: new Date(),
       },
     });

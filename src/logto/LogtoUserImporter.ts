@@ -11,32 +11,43 @@ export class LogtoUserImporter {
   }
 
   buildUserPayload(user: UserWithRelations) {
+    console.log(user);
     const payload: Record<string, any> = {
       ...(user.primary_email && { primaryEmail: user.primary_email }),
       ...(user.username && { username: user.username }),
       ...(user.password && { password: user.password }),
       ...(user.name && { name: user.name }),
-      
     };
 
     const profile: Record<string, any> = {
-      ...(user.logto_profile?.given_name && { givenName: user.logto_profile.given_name }),
-      ...(user.logto_profile?.family_name && { familyName: user.logto_profile.family_name }),
-      ...(user.logto_profile?.nickname && { nickname: user.logto_profile.nickname }),
+      ...(user.logto_profile?.given_name && {
+        givenName: user.logto_profile.given_name,
+      }),
+      ...(user.logto_profile?.family_name && {
+        familyName: user.logto_profile.family_name,
+      }),
+      ...(user.logto_profile?.nickname && {
+        nickname: user.logto_profile.nickname,
+      }),
       ...(user.username && { preferredUsername: user.username }),
-      ...(user.logto_profile?.website && { website: user.logto_profile.website }),
+      ...(user.logto_profile?.website && {
+        website: user.logto_profile.website,
+      }),
       ...(user.logto_profile?.gender && { gender: user.logto_profile.gender }),
-      ...(user.logto_profile?.birthdate && { birthdate: user.logto_profile.birthdate }),
+      ...(user.logto_profile?.birthdate && {
+        birthdate: user.logto_profile.birthdate,
+      }),
       zoneinfo: "America/Sao_Paulo",
       locale: "pt-BR",
     };
-    
 
-    
-    const fullName = [user.logto_profile?.given_name, user.logto_profile?.family_name]
+    const fullName = [
+      user.logto_profile?.given_name,
+      user.logto_profile?.family_name,
+    ]
       .filter(Boolean)
       .join(" ");
-    
+
     if (fullName) {
       payload.name = fullName;
     }
@@ -62,7 +73,9 @@ export class LogtoUserImporter {
         },
       });
 
-      console.log(`🎉 Usuário ID ${user.id} importado com sucesso. Status: ${response.status}`);
+      console.log(
+        `🎉 Usuário ID ${user.id} importado com sucesso. Status: ${response.status}`
+      );
       await new Promise((resolve) => setTimeout(resolve, 200));
     } catch (error: any) {
       const status = error?.response?.status;
