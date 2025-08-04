@@ -11,14 +11,15 @@
     "start:csv": "ts-node -r tsconfig-paths/register src/main.ts --csv --runBatch --preClear",
     "start:all": "ts-node -r tsconfig-paths/register src/main.ts --json --csv --runBatch --preClear",
     "start:clear": "ts-node -r tsconfig-paths/register src/main.ts --endClear",
-    "start:batch": "ts-node -r tsconfig-paths/register src/main.ts --runOnlyBatch" 
-
+    "start:batch": "ts-node -r tsconfig-paths/register src/main.ts --runOnlyBatch",
+    "start:validation": "ts-node -r tsconfig-paths/register src/logto/streamUsers.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "@types/node": "^24.1.0",
     "@types/papaparse": "^5.3.16",
     "@types/stream-json": "^1.7.8",
@@ -28,6 +29,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
+    "axios": "^1.11.0",
     "csv-parser": "^3.2.0",
     "iconv-lite": "^0.6.3",
     "json-schema-to-typescript": "^15.0.4",
