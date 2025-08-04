@@ -55,7 +55,16 @@ export function medcelAdminStudentsMapper(
       phone?.prefix,
       phone?.number,
     ]),
-    primaryEmail: isValidEmail(email?.name) ? email.name : "",
+    primaryEmail: (() => {
+      if (isValidEmail(root.account?.email)) {
+        return root.account.email;
+      }
+      if (isValidEmail(email?.name)) {
+        return email.name;
+      }
+      return "";
+    })(),
+    
     username: root.account?.username || "",
     password: root.account?.password || "",
     name: fullName,

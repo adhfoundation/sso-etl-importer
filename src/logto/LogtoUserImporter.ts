@@ -15,7 +15,11 @@ export class LogtoUserImporter {
     const payload: Record<string, any> = {
       ...(user.primary_email && { primaryEmail: user.primary_email }),
       ...(user.username && { username: user.username }),
-      ...(user.password && { password: user.password }),
+      ...(user.password && { 
+        // password: user.password 
+        passwordDigest: user.password ,
+        passwordAlgorithm: "Bcrypt",
+      }),
       ...(user.name && { name: user.name }),
     };
 
