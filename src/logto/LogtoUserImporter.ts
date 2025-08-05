@@ -1,3 +1,4 @@
+import { logto_phone } from "@prisma/client";
 import axios from "axios";
 import { UserWithRelations } from "logto/streamUsers";
 
@@ -15,13 +16,18 @@ export class LogtoUserImporter {
     const payload: Record<string, any> = {
       ...(user.primary_email && { primaryEmail: user.primary_email }),
       ...(user.username && { username: user.username }),
-      ...(user.password && { 
-        // password: user.password 
-        passwordDigest: user.password ,
+      ...(user.password && {
+        // password: user.password
+        passwordDigest: user.password,
         passwordAlgorithm: "Bcrypt",
       }),
       ...(user.name && { name: user.name }),
+      ...(user?.logto_phone?.[0]?.phone && { primaryPhone: user.logto_phone[0].phone }),
+
     };
+
+    
+    
 
     const profile: Record<string, any> = {
       ...(user.logto_profile?.given_name && {

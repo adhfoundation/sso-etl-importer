@@ -4,6 +4,7 @@ import { MainApp } from "@app/MainApp";
 import path from "path";
 import { medcelAdminStudentsMapper } from "mappers/medcelAdminStudents.Mapper";
 import { JsonBatchProcessor } from "processors/JsonBatchProcessor";
+import { promises as fs } from "fs";
 
 export class JsonBatchStrategy implements IBatchStrategy {
   constructor(private readonly flags: AppFlags) {}
@@ -24,7 +25,13 @@ export class JsonBatchStrategy implements IBatchStrategy {
       "files/input/dados.json"
     );
 
-    // refatorar para strategy
+    try {
+      await fs.access(inputFilePath);
+    } catch (err) {
+      console.error(`❌ Arquivo JSON não encontrado: ${inputFilePath}`);
+      return;
+    }
+
     const mapper = medcelAdminStudentsMapper;
 
     const processor = new JsonBatchProcessor(

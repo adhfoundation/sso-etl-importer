@@ -12,6 +12,12 @@ export class AppController {
   async run() {
     try {
       const facade = new AppFacade(this.app, this.flags);
+
+      if (this.flags.endClear) {
+        await this.app.clearOutput();
+        return console.log("Limpando diretório de saída (endClear)...");
+      }
+      
       await facade.execute();
     } catch (err) {
       console.error("Erro inesperado na aplicação:", err);

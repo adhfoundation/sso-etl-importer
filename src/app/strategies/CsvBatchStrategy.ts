@@ -4,6 +4,8 @@ import { AppFlags } from "@utils/flags";
 import { csvDefaultMapper } from "mappers/csv.Mapper";
 import { CsvBatchProcessor } from "processors/csvBatchProcessor";
 import path from "path";
+import { promises as fs } from "fs";
+
 
 export class CsvBatchStrategy implements IBatchStrategy {
   constructor(private readonly flags: AppFlags) {}
@@ -23,6 +25,13 @@ export class CsvBatchStrategy implements IBatchStrategy {
       "..",
       "files/input/dados.csv"
     );
+
+    try {
+      await fs.access(inputFilePath);
+    } catch (err) {
+      console.error(`❌ Arquivo CSV não encontrado: ${inputFilePath}`);
+      return;
+    }
 
     const mapper = csvDefaultMapper;
 
