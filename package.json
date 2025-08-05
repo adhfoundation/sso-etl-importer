@@ -12,7 +12,8 @@
     "start:all": "ts-node -r tsconfig-paths/register src/main.ts --json --csv --runBatch --preClear",
     "start:clear": "ts-node -r tsconfig-paths/register src/main.ts --endClear",
     "start:batch": "ts-node -r tsconfig-paths/register src/main.ts --runOnlyBatch",
-    "start:validation": "ts-node -r tsconfig-paths/register src/logto/streamUsers.ts"
+    "start:validation": "ts-node -r tsconfig-paths/register src/logto/streamUsers.ts",
+    "refresh-token": "ts-node -r tsconfig-paths/register src/utils/tokenRefresher.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
     "@prisma/client": "^6.12.0",
     "axios": "^1.11.0",
     "csv-parser": "^3.2.0",
+    "dotenv": "^16.4.5",
     "iconv-lite": "^0.6.3",
     "json-schema-to-typescript": "^15.0.4",
     "p-limit": "^6.2.0",

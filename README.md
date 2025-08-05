@@ -37,8 +37,12 @@ Edite o arquivo `.env` com suas configurações:
 
 ```
 DATABASE_URL="postgresql://user:password@127.0.0.1:5433/postgres"
-LOGTO_ACCESS_API_URL = "http://127.0.0.1:3001"
+LOGTO_ACCESS_API_URL="http://127.0.0.1:3001"
 LOGTO_ACCESS_TOKEN="<seu-token-de-acesso>"
+
+# Configurações para atualização automática do token
+LOGTO_TOKEN_URL="http://127.0.0.1:3001/oidc/token"
+LOGTO_CLIENT_CREDENTIALS="Basic Y3M0NG5xd2hqdXR5dTBqcXc0c3dhOk11aWhsOGw1aEVuRzFJbHNrVHJQeFg4UlB1TDQ3a2Nq"
 ```
 
 ### 4. Configuração do banco de dados
@@ -49,6 +53,33 @@ Inicie o PostgreSQL usando Docker Compose:
 
 ```bash
 docker-compose up -d
+```
+
+### 5. Atualização automática do token Logto
+
+O projeto inclui um script para atualizar automaticamente o token de acesso do Logto. Para utilizá-lo:
+
+```bash
+npm run refresh-token
+```
+
+Este comando irá:
+1. Obter um novo token de acesso do Logto usando as credenciais configuradas no arquivo `.env`
+2. Atualizar automaticamente o arquivo `.env` com o novo token
+
+Você pode configurar este comando para ser executado periodicamente para manter o token sempre atualizado.
+```
+
+#### Agendamento automático
+
+O projeto inclui scripts de exemplo para configurar a atualização automática do token:
+
+- **Windows**: Use o arquivo `scripts/refresh-token.bat` com o Agendador de Tarefas do Windows
+- **Linux/Mac**: Use o arquivo `scripts/refresh-token.sh` com cron
+
+Exemplo de configuração cron (executar a cada hora):
+```bash
+0 * * * * /caminho/completo/para/scripts/refresh-token.sh
 ```
 
 #### Configuração manual
