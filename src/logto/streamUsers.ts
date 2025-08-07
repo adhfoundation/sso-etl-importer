@@ -1,38 +1,25 @@
-import {
-  PrismaClient,
-  logto_user,
-  logto_profile,
-  logto_phone,
-  logto_import_log,
-} from "@prisma/client";
-import { ValidationPipeline } from "validators/BaseValidator/ValidationPipeline";
-import { LogtoUserImporter } from "./LogtoUserImporter";
-
-export type UserWithRelations = logto_user & {
-  logto_profile: logto_profile | null;
-  logto_phone: logto_phone[];
-  logto_import_logs: logto_import_log[];
-};
+import { stg_import_log, PrismaClient } from '@prisma/client';
+import { ValidationPipeline } from '../validators/BaseValidator/ValidationPipeline';
+import { LogtoUserImporter } from './LogtoUserImporter';
+import { StgUserRepository, UserWithRelations } from '../repositories/StgUserRepository';
+import { StgImportLogRepository } from '../repositories/StgImportLogRepository';
 
 export class UserStreamer {
-  private prisma = new PrismaClient();
+  private repository: StgUserRepository;
+  private logRepository: StgImportLogRepository;
   private batchSize: number;
   private lastId?: number;
 
-  constructor(batchSize = 100) {
+  constructor(repository: StgUserRepository, logRepository: StgImportLogRepository, batchSize = 100) {
+    this.repository = repository;
+    this.logRepository = logRepository;
     this.batchSize = batchSize;
   }
 
   private async fetchUsersBatch(): Promise<UserWithRelations[]> {
-    return await this.prisma.logto_user.findMany({
+    return await this.repository.findMany({
       take: this.batchSize,
-      orderBy: { id: "asc" },
       ...(this.lastId ? { cursor: { id: this.lastId }, skip: 1 } : {}),
-      include: {
-        logto_profile: true,
-        logto_phone: true,
-        logto_import_logs: true,
-      },
     });
   }
 
@@ -52,88 +39,85 @@ export class UserStreamer {
   }
 
   async logValidationError(userId: number, errors: string[]) {
-    await this.prisma.logto_import_log.create({
-      data: {
-        user_id: userId,
-        type: "IMPORT-VALIDATION_ERROR--to-LogTo",
-        message: [`[userId: ${userId}]`].concat(errors).join("; "),
-        created_at: new Date(),
-      },
+    const formattedErrors = errors.map((error, index) => `${index + 1}. ${error}`).join('\n');
+    await this.logRepository.create({
+      type: 'IMPORT-VALIDATION_ERROR--TO-LOGTO',
+      message: `[userId: ${userId}]\n${formattedErrors}`,
+      indexRegister: userId.toString(),
+      file: 'validation',
+      batchId: '00000000-0000-0000-0000-000000000000',
+      userId,
     });
   }
 
   async logValidationSuccess(userId: number, messages: string[]) {
-    await this.prisma.logto_import_log.create({
-      data: {
-        user_id: userId,
-        type: "IMPORT-VALIDATION_SUCCESS--to-LogTo",
-        message: messages.join("; "),
-        created_at: new Date(),
-      },
+    const formattedMessages = messages.map((message, index) => `${index + 1}. ${message}`).join('\n');
+    await this.logRepository.create({
+      type: 'IMPORT-VALIDATION_SUCCESS--TO-LOGTO',
+      message: formattedMessages,
+      indexRegister: userId.toString(),
+      file: 'validation',
+      batchId: '00000000-0000-0000-0000-000000000000',
+      userId,
     });
-  }
-
-  async disconnect() {
-    await this.prisma.$disconnect();
   }
 }
 
 (async () => {
-  const streamer = new UserStreamer(100);
+  const userRepository = new StgUserRepository(new PrismaClient());
+  const logRepository = new StgImportLogRepository(new PrismaClient());
+  const streamer = new UserStreamer(userRepository, logRepository, 100);
   const pipeline = new ValidationPipeline();
-
-  const logtoApiUrl = process.env.LOGTO_ACCESS_API_URL;
-  const logtoAccessToken = process.env.LOGTO_ACCESS_TOKEN;
-
-  if(!logtoApiUrl) {
-    console.error(new Error("logtoApiUrl is mission! exiting..."))
-    return;
-  }
-
-  if(!logtoAccessToken) {
-    console.error(new Error("logtoAccessToken is mission! exiting..."))
-    return;
-  }
 
   try {
     await streamer.processAll(async (user) => {
-      console.log("=====================================================");
-      console.log(`🔄 Processando usuário ID: ${user.id} | Nome: ${user.name}`);
+      console.log('\n=====================================================');
+      console.log(`\n🔄 Iniciando processamento do usuário:`);
+      console.log(`ID: ${user.id}`);
+      console.log(`Nome: ${user.name || 'Não informado'}`);
+      console.log(`Email: ${user.primary_email || 'Não informado'}`);
 
       const { errors, validations } = await pipeline.run(user);
-      console.log("✅ Validações executadas:", validations);
+      console.log('\n✅ Validações executadas:');
 
       if (errors.length > 0) {
-        console.warn(`⚠️ Usuário inválido (ID ${user.id}):`, errors);
+        console.warn(`\n⚠️ Usuário inválido:`);
+        console.warn(`ID: ${user.id}`);
+        errors.forEach((error, index) => {
+          console.warn(`${index + 1}. ${error}`);
+        });
         await streamer.logValidationError(user.id, errors);
         return;
       }
 
-      console.log(`✅ Usuário válido. Iniciando importação para Logto...`);
+      console.log(`\n✅ Usuário válido`);
+      console.log(`Iniciando importação para Logto...`);
 
       try {
-        const importer = new LogtoUserImporter(logtoApiUrl, logtoAccessToken);
-        await importer.importUser(user);
-        console.log(`✅ Usuário ID ${user.id} importado com sucesso.`);
+        const importer = new LogtoUserImporter();
+        const result = await importer.importUser(user);
+
+        const operationType = result?.updated ? 'atualizado' : 'importado';
+        const logtoId = result?.logtoUserId || '????';
+
+        console.log(`\n✅ Usuário ${operationType} com sucesso`);
+        console.log(`ID Local: ${user.id}`);
+        console.log(`ID Logto: ${logtoId}`);
         await streamer.logValidationSuccess(user.id, [
-          "Usuário importado com sucesso.",
-          `id-importação: [${user.id}]`,
-          `id-logTo: [????]`,
-          `user: ${String(user?.name || user?.primary_email)}`,
+          `Usuário ${operationType} com sucesso`,
+          `ID Local: ${user.id}`,
+          `ID Logto: ${logtoId}`,
+          `Usuário: ${String(user?.name || user?.primary_email)}`,
         ]);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-
-        //aqui podemos checar se há alterações caso o usuário já existir com status 422
-        console.error(`❌ Erro ao importar usuário ID ${user.id}: ${message}`);
-
+        console.error(`\n❌ Erro ao processar usuário:`);
+        console.error(`ID: ${user.id}`);
+        console.error(`Erro: ${message}`);
         await streamer.logValidationError(user.id, [message]);
       }
     });
   } catch (error) {
-    console.error("❌ Erro inesperado no processo:", error);
-  } finally {
-    await streamer.disconnect();
-    console.log("🚪 Conexão com banco encerrada.");
+    console.error('❌ Erro inesperado no processo:', error);
   }
 })();

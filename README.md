@@ -86,10 +86,34 @@ Exemplo de configuração cron (executar a cada hora):
 
 Se preferir usar um banco de dados PostgreSQL existente, atualize a variável `DATABASE_URL` no arquivo `.env` com as credenciais corretas.
 
-### 5. Execute as migrações do banco de dados
+### 5. Configuração do banco de dados
+
+#### Migrações consolidadas
+
+O projeto utiliza uma migração consolidada que inclui:
+- Tabelas de staging (`stg_user`, `stg_profile`, `stg_address`, `stg_phone`, `stg_import_log`)
+- Views auxiliares para análise de dados duplicados e incompletos
+- Função `sp_clean_stg_tables` para limpeza das tabelas de staging
+- Todas as constraints e relacionamentos necessários
+
+#### Execução automática das migrações
+
+As migrações do banco de dados são executadas automaticamente quando você inicia a aplicação pela primeira vez. Não é necessário executar comandos adicionais.
+
+#### Scripts de migração disponíveis:
 
 ```bash
-npm run run:migrations
+# Aplicar migrações pendentes e gerar cliente Prisma (executado automaticamente)
+npm run prisma:setup
+
+# Resetar banco de dados e aplicar todas as migrações
+npm run prisma:run:migrations
+
+# Aplicar apenas migrações pendentes
+npm run prisma:migrate:deploy
+
+# Gerar cliente Prisma
+npm run prisma:generate
 ```
 
 ## Estrutura de diretórios
@@ -113,10 +137,12 @@ npm run run:migrations
 ### Preparação
 
 1. Coloque os arquivos a serem processados no diretório `src/files/input/`
+2. Configure o arquivo `.env` com as credenciais corretas
+3. Certifique-se de que o banco de dados PostgreSQL está rodando
 
 ### Execução
 
-O projeto oferece vários scripts para diferentes cenários de uso:
+Todos os scripts de execução aplicam automaticamente as migrações do banco de dados antes de iniciar o processamento. O projeto oferece vários scripts para diferentes cenários de uso:
 
 #### Processar arquivos JSON
 
@@ -165,6 +191,41 @@ O sistema suporta as seguintes flags que podem ser usadas nos comandos:
 - `--preClear`: Limpa o diretório de saída antes do processamento
 - `--endClear`: Limpa o diretório de saída após o processamento
 - `--json-medcel`: Processa arquivos JSON específicos do Medcel (wip)
+
+## Troubleshooting
+
+### Problemas com migrações
+
+Se você encontrar problemas com as migrações do banco de dados:
+
+1. **Resetar completamente o banco**:
+   ```bash
+   npm run prisma:run:migrations
+   ```
+
+2. **Verificar status das migrações**:
+   ```bash
+   npx prisma migrate status
+   ```
+
+3. **Regenerar cliente Prisma**:
+   ```bash
+   npm run prisma:generate
+   ```
+
+### Problemas de conexão com o banco
+
+- Verifique se o PostgreSQL está rodando
+- Confirme as credenciais no arquivo `.env`
+- Teste a conexão com: `npx prisma db pull`
+
+### Token Logto expirado
+
+Se você receber erros de autenticação:
+
+```bash
+npm run refresh-token
+```
 
 ## Contribuição
 
