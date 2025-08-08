@@ -7,39 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model logto_user {
-  id                Int                @id @default(autoincrement())
-  primary_email     String?
-  username          String?
-  password          String?
-  name              String?
-  cpf               String?
-  created_at        DateTime           @default(now())
-  logto_import_logs logto_import_log[]
-  logto_phone       logto_phone[]
-  logto_profile     logto_profile?
+model stg_user {
+  id              Int              @id @default(autoincrement())
+  primary_email   String?
+  username        String?
+  password        String?
+  name            String?
+  cpf             String?          @db.VarChar(255)
+  created_at      DateTime         @default(now())
+  stg_import_logs stg_import_log[]
+  stg_phone       stg_phone[]
+  stg_profile     stg_profile?
 }
 
-model logto_profile {
-  id                 Int             @id @default(autoincrement())
-  user_id            Int             @unique
+model stg_profile {
+  id                 Int           @id @default(autoincrement())
+  user_id            Int           @unique
   family_name        String?
   given_name         String?
   nickname           String?
   preferred_username String?
   gender             String?
-  birthdate          DateTime?       @db.Date
+  birthdate          DateTime?     @db.Date
   profile            String?
   website            String?
   zoneinfo           String?
   locale             String?
-  created_at         DateTime        @default(now())
-  logto_address      logto_address[]
-  logto_user         logto_user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at         DateTime      @default(now())
+  stg_address        stg_address[]
+  stg_user           stg_user      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model logto_address {
-  id             Int           @id @default(autoincrement())
+model stg_address {
+  id             Int         @id @default(autoincrement())
   user_id        Int
   formatted      String?
   street_address String?
@@ -47,30 +47,29 @@ model logto_address {
   region         String?
   postal_code    String?
   country        String?
-  created_at     DateTime      @default(now())
-  logto_profile  logto_profile @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at     DateTime    @default(now())
+  stg_profile    stg_profile @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model logto_phone {
-  id           Int        @id @default(autoincrement())
+model stg_phone {
+  id           Int      @id @default(autoincrement())
   user_id      Int
   phone        String?
   country_code String?
   prefix       String?
   number       String?
-  created_at   DateTime   @default(now())
-  logto_user   logto_user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at   DateTime @default(now())
+  stg_user     stg_user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model logto_import_log {
-  id             Int        @id @default(autoincrement())
-  user_id        Int?       
+model stg_import_log {
+  id             Int       @id @default(autoincrement())
+  user_id        Int?
   type           String
   message        String
-  created_at     DateTime   @default(now())
+  created_at     DateTime  @default(now())
   index_register String?
   file           String?
   batch_id       String?
-  logto_user     logto_user? @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  stg_user       stg_user? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
-

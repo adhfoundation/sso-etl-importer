@@ -1,11 +1,11 @@
-// src/services/ImportLoggerService.ts
-import { PrismaClient } from "@prisma/client";
 import { UUID } from "crypto";
-
-type LogType = "success" | "ignored" | "error" | "IMPORT-USER-BATCH--TO-DB--SUCCESS" | "IMPORT-USER-BATCH--TO-DB--ERROR";
+import {
+  StgImportLogRepository,
+  LogType,
+} from "../repositories/StgImportLogRepository";
 
 export class ImportLoggerService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private repository: StgImportLogRepository) {}
 
   async log(
     type: LogType,
@@ -13,26 +13,15 @@ export class ImportLoggerService {
     indexRegister: string,
     file: string,
     batchId: UUID,
-    userId?: number
+    userId: number | null = null
   ) {
-    const data: any = {
+    await this.repository.create({
       type,
       message,
-      index_register: indexRegister,
+      indexRegister,
       file,
-      batch_id: batchId,
-    };
-    if (userId) {
-      data.user_id = userId;
-    }
-    await this.prisma.logto_import_log.create({ data });
-
-    // const prefix = {
-    //   success: "✅",
-    //   ignored: "⚠️",
-    //   error: "❌",
-    // }[type];
-
-    // console.log(`${prefix} ${message} - register: ${indexRegister}`);
+      batchId,
+      userId: userId ?? undefined,
+    });
   }
 }
