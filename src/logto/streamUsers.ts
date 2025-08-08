@@ -39,7 +39,7 @@ export class UserStreamer {
   }
 
   async logValidationError(userId: number, errors: string[]) {
-    const formattedErrors = errors.map((error, index) => `${index + 1}. ${error}`).join('\n');
+    const formattedErrors = errors.map((error) => `${error}`).join('\n');
     await this.logRepository.create({
       type: 'IMPORT-VALIDATION_ERROR--TO-LOGTO',
       message: `[userId: ${userId}]\n${formattedErrors}`,

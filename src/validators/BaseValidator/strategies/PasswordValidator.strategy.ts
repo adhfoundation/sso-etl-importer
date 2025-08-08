@@ -1,4 +1,4 @@
-import { UserWithRelations } from "logto/streamUsers";
+import { UserWithRelations } from "repositories/StgUserRepository";
 import { BaseValidator, ValidationContext } from "../BaseValidator";  
   export class PasswordValidator extends BaseValidator {
     protected async handle(user: UserWithRelations, context: ValidationContext): Promise<void> {

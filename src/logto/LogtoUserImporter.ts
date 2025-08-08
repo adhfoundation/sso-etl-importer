@@ -95,6 +95,11 @@ export class LogtoUserImporter {
         logtoUserId: response.id,
       };
     } catch (error: any) {
+      if (!error?.response && error?.message) {
+        this.errors.push(error?.message);
+        throw error;
+      }
+
       const status = error?.response?.status;
       const data = error?.response?.data;
 
@@ -103,12 +108,25 @@ export class LogtoUserImporter {
         this.errors.push(
           `Usuário já existe no Logto: ${user.primary_email || user.username}`
         );
-        this.errors.push(error?.response?.data?.message);
+        this.errors.push(data.message);
 
-        return this.updateExistingUser(user, payload).then(
-          (result) => result || { updated: false, logtoUserId: data?.id }
+        const errosMessage = [
+          `Erro ${status || status?.message || "[desconhecido]"} ao importar ${user.primary_email || user.username} no Logto.`,
+          ...this.errors.map((err) => `[importUser] - ${err}`)
+
+        ]
+        throw new Error(
+          `[importUser] - ${errosMessage.join("\n[importUser]")}`
         );
+        // return this.updateExistingUser(user, payload).then(
+        //   (result) => result || { updated: false, logtoUserId: data?.id }
+        // );
       }
+
+      const errMsg = data?.message || "Sem mensagem de erro";
+      this.errors.push(
+        `[importUser] - Erro ${status || "desconhecido"}: ${errMsg}`
+      );
 
       console.error(`\n❌ Erro ao importar usuário ID ${user.id}:`);
       console.error(`Status: ${status}`);
@@ -116,7 +134,7 @@ export class LogtoUserImporter {
       console.error(`Detalhes: ${JSON.stringify(data, null, 2)}`);
 
       throw new Error(
-        `Erro ${status || "desconhecido"} ao importar ${user.primary_email || user.username}`
+        `\n[importUser] - Erro ${status || status?.message || "[desconhecido]"} ao importar ${user.primary_email || user.username} no Logto. ${this.errors.join("\n")}`
       );
     }
   }
@@ -167,6 +185,7 @@ export class LogtoUserImporter {
     } catch (error: any) {
       if (!error?.response && error?.message) {
         this.errors.push(error?.message);
+        throw error;
       }
 
       if (error?.response) {
@@ -182,6 +201,7 @@ export class LogtoUserImporter {
           `[updateExistingUser] - Erro ${status || status?.message || "[desconhecido]"} ao atualizar ${user.primary_email || user.username} no Logto`
         );
       }
+      throw error;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { UserWithRelations } from "logto/streamUsers";
+import { UserWithRelations } from "repositories/StgUserRepository";
 import { BaseValidator, ValidationContext } from "../BaseValidator";
 
 export class EmailValidator extends BaseValidator {

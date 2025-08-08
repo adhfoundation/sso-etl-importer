@@ -1,4 +1,4 @@
-import { UserWithRelations } from "logto/streamUsers";
+import { UserWithRelations } from "repositories/StgUserRepository";
 import { ValidationContext } from "./BaseValidator";
 import { BaseValidator } from "./BaseValidator"; // assumindo que existe essa base abstrata
 import { EmailValidator } from "./strategies/EmailValidator.strategy";
@@ -27,6 +27,9 @@ export class ValidationPipeline {
       new PasswordValidator(),
       new ValidUserValidator(),
 
+      // to-dos
+      // checar se usuário já existe no logTo()
+      // new DeduplicaçãoDeUsuário(),
     ];
 
     this.headValidator = chainValidators(validators);
