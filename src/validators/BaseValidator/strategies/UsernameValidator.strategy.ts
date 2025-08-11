@@ -4,7 +4,7 @@ import { Username, UsernameOptions } from "domain/Username";
 
 export interface UsernameValidatorOptions extends UsernameOptions {}
 
-export class UsernameValidator extends BaseValidator {
+export class UsernameValidatorStrategy extends BaseValidator {
   private readonly options: UsernameValidatorOptions;
   private readonly messages = {
     missing: "Missing username",
