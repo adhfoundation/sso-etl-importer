@@ -1,77 +1,57 @@
 import { UserWithRelations } from "repositories/StgUserRepository";
 import { BaseValidator, ValidationContext } from "../BaseValidator";
-
-const SUPPORTED_ALGORITHMS = [
-  "Argon2i",
-  "Argon2id",
-  "Argon2d",
-  "SHA1",
-  "SHA256",
-  "MD5",
-  "Bcrypt",
-  "Legacy"
-];
+import { Password } from "domain/Password"; // ajuste o path conforme necessário
 
 interface PasswordValidatorOptions {
   minLength?: number;
   maxLength?: number;
 }
 
-export class PasswordValidator extends BaseValidator {
+export class PasswordValidatorStrategy extends BaseValidator {
   private options: PasswordValidatorOptions;
-  private messages: {
-    missingPassword: string;
-    invalidLength: string;
-    invalidDigest: string;
-    invalidAlgorithm: string;
-    validPassword: string;
+  private messages = {
+    missingPassword: "[Password] Missing password or password digest",
+    invalidLength: "[Password] Password length must be between 6 and 256 characters",
+    invalidDigest: "[Password] passwordDigest exceeds maximum length of 256 characters",
+    invalidAlgorithm: "[Password] Unsupported or missing passwordAlgorithm",
+    validPassword: "[Password] Valid password data",
   };
 
   constructor(options?: PasswordValidatorOptions) {
     super();
     this.options = { minLength: 6, maxLength: 256, ...options };
-    this.messages = {
-      missingPassword: "[Password] Missing password or password digest",
-      invalidLength: "[Password] Password length must be between 6 and 256 characters",
-      invalidDigest: "[Password] passwordDigest exceeds maximum length of 256 characters",
-      invalidAlgorithm: "[Password] Unsupported or missing passwordAlgorithm",
-      validPassword: "[Password] Valid password data",
-    };
   }
 
   protected async handle(user: UserWithRelations, context: ValidationContext): Promise<void> {
-    const hasPassword = !!user.password;
-    const hasDigest = !!(user as any).passwordDigest;
+    const password = new Password({
+      password: user.password,
+      passwordDigest: (user as any).passwordDigest,
+      passwordAlgorithm: (user as any).passwordAlgorithm,
+    });
 
-    if (!hasPassword && !hasDigest) {
+    if (password.isEmpty()) {
       context.logs.push(this.messages.missingPassword);
       return;
     }
 
-    // Se estiver usando password normal
-    if (hasPassword) {
-      if (user.password && (user.password.length < this.options.minLength! || user.password.length > this.options.maxLength!)) {
+    if (password.getPassword()) {
+      if (!password.isRawValid(this.options.minLength, this.options.maxLength)) {
         context.logs.push(this.messages.invalidLength);
         return;
       }
     }
 
-    // Se estiver usando passwordDigest
-    if (hasDigest) {
-      const passwordDigest = (user as any).passwordDigest;
-      if (passwordDigest && passwordDigest.length > 256) {
+    if (password.getDigest()) {
+      if (!password.isDigestValid()) {
         context.logs.push(this.messages.invalidDigest);
         return;
       }
-
-      const algo = (user as any).passwordAlgorithm;
-      if (!algo || !SUPPORTED_ALGORITHMS.includes(algo)) {
+      if (!password.hasSupportedAlgorithm()) {
         context.logs.push(this.messages.invalidAlgorithm);
         return;
       }
     }
-    
-    // Se tudo estiver válido
+
     context.validations.password = true;
     context.logs.push(this.messages.validPassword);
   }
