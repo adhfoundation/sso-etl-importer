@@ -10,6 +10,7 @@ import { LogtoHttpClient } from "../../clients/LogtoHttpClient";
 import { LogtoPhoneValidator } from "./strategies/LogtoPhoneValidator.strategy";
 import { LogtoProfileValidator } from "./strategies/LogtoProfileValidator.strategy";
 import { LogtoDuplicateValidator } from "./strategies/LogtoDuplicateValidator.strategy";
+import { PhoneValidatorStrategy } from "./strategies/PhoneValidator.strategy";
 
 // Novos validadores específicos para LogTo
 
@@ -44,7 +45,9 @@ export class ValidationPipeline {
     const validators: BaseValidator[] = [
       // Validações básicas de dados
       new EmailValidatorStrategy({ required: true, allowedDomains: [] }),
+      new PhoneValidatorStrategy({ required: true, allowedDDIs: ["55"], blockedDDIs: [] }),
       new UsernameValidator(),
+      
       new PasswordValidator(),
       
       // Validações específicas do LogTo
