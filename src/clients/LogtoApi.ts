@@ -20,7 +20,13 @@ export class LogtoApi {
     return result?.data?.[0] || null;
   }
 
+  async getUsers(page: number = 1, pageSize: number = 100): Promise<{ data: Array<any> }> {
+    const result = await this.client.get<{ data: Array<any> }>(
+      `/api/users?page=${page}&page_size=${pageSize}`
+    );
+    return result;
+  }
+
   // Você pode adicionar mais conforme necessidade:
   // async deleteUser(id: string)
-  // async listUsers(page = 1)
 }
