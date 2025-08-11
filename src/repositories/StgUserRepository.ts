@@ -1,7 +1,9 @@
-import { PrismaClient, stg_user, stg_profile, stg_phone } from '@prisma/client';
+import { PrismaClient, stg_user, stg_profile, stg_phone, stg_address } from '@prisma/client';
 
 export type UserWithRelations = stg_user & {
-  stg_profile: stg_profile | null;
+  stg_profile: (stg_profile & {
+    stg_address: stg_address[];
+  }) | null;
   stg_phone: stg_phone[];
 };
 
@@ -22,7 +24,11 @@ export class StgUserRepository {
       orderBy: { id: 'asc' },
       ...(cursor ? { cursor, skip } : {}),
       include: {
-        stg_profile: true,
+        stg_profile: {
+          include: {
+            stg_address: true,
+          },
+        },
         stg_phone: true,
       },
     });
