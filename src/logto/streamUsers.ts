@@ -91,30 +91,44 @@ export class UserStreamer {
       }
 
       console.log(`\n✅ Usuário válido`);
-      console.log(`Iniciando importação para Logto...`);
+      
+      // Verificar se LogTo está configurado
+      const logtoConfigured = process.env.LOGTO_ACCESS_API_URL && process.env.LOGTO_ACCESS_TOKEN;
+      
+      if (logtoConfigured) {
+        console.log(`Iniciando importação para Logto...`);
+        try {
+          const importer = new LogtoUserImporter();
+          const result = await importer.importUser(user);
 
-      try {
-        const importer = new LogtoUserImporter();
-        const result = await importer.importUser(user);
+          const operationType = result?.updated ? 'atualizado' : 'importado';
+          const logtoId = result?.logtoUserId || '????';
 
-        const operationType = result?.updated ? 'atualizado' : 'importado';
-        const logtoId = result?.logtoUserId || '????';
-
-        console.log(`\n✅ Usuário ${operationType} com sucesso`);
+          console.log(`\n✅ Usuário ${operationType} com sucesso`);
+          console.log(`ID Local: ${user.id}`);
+          console.log(`ID Logto: ${logtoId}`);
+          await streamer.logValidationSuccess(user.id, [
+            `Usuário ${operationType} com sucesso`,
+            `ID Local: ${user.id}`,
+            `ID Logto: ${logtoId}`,
+            `Usuário: ${String(user?.name || user?.primary_email)}`,
+          ]);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`\n❌ Erro ao processar usuário:`);
+          console.error(`ID: ${user.id}`);
+          console.error(`Erro: ${message}`);
+          await streamer.logValidationError(user.id, [message]);
+        }
+      } else {
+        console.log(`⚠️ LogTo não configurado - apenas validação executada`);
         console.log(`ID Local: ${user.id}`);
-        console.log(`ID Logto: ${logtoId}`);
+        console.log(`Usuário: ${String(user?.name || user?.primary_email)}`);
         await streamer.logValidationSuccess(user.id, [
-          `Usuário ${operationType} com sucesso`,
+          `Validação executada com sucesso (LogTo não configurado)`,
           `ID Local: ${user.id}`,
-          `ID Logto: ${logtoId}`,
           `Usuário: ${String(user?.name || user?.primary_email)}`,
         ]);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error(`\n❌ Erro ao processar usuário:`);
-        console.error(`ID: ${user.id}`);
-        console.error(`Erro: ${message}`);
-        await streamer.logValidationError(user.id, [message]);
       }
     });
   } catch (error) {

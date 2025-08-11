@@ -129,8 +129,18 @@ npm run prisma:generate
   - `processors/`: Processadores para diferentes formatos de arquivo
   - `services/`: Serviços da aplicação
   - `types/`: Definições de tipos
+  - `domain/`: Modelos de domínio com validação integrada
+    - `Address.ts`: Validação de endereços
+    - `Email.ts`: Validação de emails
+    - `Name.ts`: Validação de nomes
+    - `Password.ts`: Validação de senhas
+    - `Phone.ts`: Validação de telefones internacionais
+    - `Profile.ts`: Validação de perfis de usuário
+    - `Username.ts`: Validação de nomes de usuário
   - `utils/`: Utilitários
   - `validators/`: Validadores de dados
+    - `BaseValidator/`: Sistema de validação base com padrão Strategy
+    - Pipeline de validação com estratégias específicas para cada domínio
 
 ## Uso
 
@@ -139,6 +149,16 @@ npm run prisma:generate
 1. Coloque os arquivos a serem processados no diretório `src/files/input/`
 2. Configure o arquivo `.env` com as credenciais corretas
 3. Certifique-se de que o banco de dados PostgreSQL está rodando
+
+### Pipeline de Validação Aprimorado
+
+O sistema agora inclui um pipeline de validação robusto que:
+
+- **Valida domínios**: Nome, Email, Telefone, Username, Password, Profile e Address
+- **Suporte internacional**: Números de telefone internacionais com DDIs flexíveis
+- **Validação condicional**: LogTo é opcional - o sistema funciona apenas com validação quando LogTo não está configurado
+- **Estratégias de validação**: Implementa padrão Strategy para diferentes tipos de validação
+- **Logs detalhados**: Fornece feedback detalhado sobre cada validação executada
 
 ### Execução
 
@@ -179,6 +199,13 @@ npm run start:clear
 ```bash
 npm run start:validation
 ```
+
+Este comando executa o pipeline de validação completo que:
+- Valida todos os campos obrigatórios e opcionais dos usuários
+- Suporta números de telefone internacionais com DDIs de 2-3 dígitos
+- Funciona independentemente da configuração do LogTo
+- Gera logs detalhados para cada usuário processado
+- Marca usuários como válidos para importação quando todos os critérios são atendidos
 
 ## Flags disponíveis
 
@@ -226,6 +253,15 @@ Se você receber erros de autenticação:
 ```bash
 npm run refresh-token
 ```
+
+### Problemas de validação
+
+Se encontrar problemas durante a validação:
+
+1. **Telefones internacionais**: O sistema agora suporta DDIs de 2-3 dígitos automaticamente
+2. **LogTo não configurado**: O sistema funciona normalmente apenas com validação, sem necessidade do LogTo
+3. **Validação de domínios**: Cada campo possui validação específica com mensagens detalhadas
+4. **Logs de validação**: Verifique os logs detalhados para identificar campos inválidos
 
 ## Contribuição
 

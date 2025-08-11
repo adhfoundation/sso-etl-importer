@@ -15,20 +15,27 @@ export class Phone {
 
   /**
    * Verifica se o formato é válido
+   * Aceita telefones nacionais e internacionais
    * Exemplo válido: +55 (11) 91234-5678 -> 5511912345678
    */
   isFormatValid(): boolean {
-    const regex = /^(?:\d{2})?(?:\d{2})?(?:9\d{8}|\d{8,9})$/;
+    // Aceita telefones com 8 a 15 dígitos (padrão internacional)
+    const regex = /^\d{8,15}$/;
     return regex.test(this.value);
   }
 
   /**
    * Extrai o DDI (código do país)
-   * Ex: 55 (Brasil)
+   * Ex: 55 (Brasil), 1 (EUA), 44 (Reino Unido)
    */
   getDDI(): string | null {
-    if (this.value.length < 12) return null; // Exige DDI + DDD + número
-    return this.value.slice(0, this.value.length - 10);
+    if (this.value.length < 10) return null; // Mínimo para ter DDI
+    // Para telefones com 10-11 dígitos, assume que não há DDI (nacional)
+    if (this.value.length <= 11) return null;
+    // Para telefones com 12+ dígitos, extrai os primeiros 1-3 dígitos como DDI
+    if (this.value.length === 12) return this.value.slice(0, 2); // DDI de 2 dígitos
+    if (this.value.length === 13) return this.value.slice(0, 3); // DDI de 3 dígitos
+    return this.value.slice(0, this.value.length - 10); // Fallback
   }
 
   /**

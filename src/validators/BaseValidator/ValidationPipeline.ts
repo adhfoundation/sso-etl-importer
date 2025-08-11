@@ -47,7 +47,7 @@ export class ValidationPipeline {
       // Validações básicas de dados
       new NameValidatorStrategy({ required: true, minLength: 2, maxLength: 50 }),
       new EmailValidatorStrategy({ required: true, allowedDomains: [] }),
-      new PhoneValidatorStrategy({ required: true, allowedDDIs: ["55"], blockedDDIs: [] }),
+      new PhoneValidatorStrategy({ required: true, allowedDDIs: [], blockedDDIs: [] }),
       new UsernameValidatorStrategy({ required: true, minLength: 6, maxLength: 20 }),
       new PasswordValidatorStrategy({ minLength: 6, maxLength: 256 }),
       new ProfileValidatorStrategy(),
