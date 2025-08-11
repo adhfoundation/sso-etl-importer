@@ -2,15 +2,15 @@ import { UserWithRelations } from "repositories/StgUserRepository";
 import { ValidationContext } from "./BaseValidator";
 import { BaseValidator } from "./BaseValidator";
 import { EmailValidatorStrategy } from "./strategies/EmailValidator.strategy";
-import { PasswordValidator } from "./strategies/PasswordValidator.strategy";
-import { UsernameValidator } from "./strategies/UsernameValidator.strategy";
+import { PasswordValidatorStrategy } from "./strategies/PasswordValidator.strategy";
+import { UsernameValidatorStrategy } from "./strategies/UsernameValidator.strategy";
 import { ValidUserValidator } from "./strategies/ValidUserValidator.strategy";
 import { LogtoApi } from "../../clients/LogtoApi";
 import { LogtoHttpClient } from "../../clients/LogtoHttpClient";
-import { LogtoPhoneValidator } from "./strategies/LogtoPhoneValidator.strategy";
-import { LogtoProfileValidator } from "./strategies/LogtoProfileValidator.strategy";
+import { ProfileValidatorStrategy } from "./strategies/ProfileValidatorStrategy";
 import { LogtoDuplicateValidator } from "./strategies/LogtoDuplicateValidator.strategy";
 import { PhoneValidatorStrategy } from "./strategies/PhoneValidator.strategy";
+import { NameValidatorStrategy } from "./strategies/NameValidatorStrategy";
 
 // Novos validadores específicos para LogTo
 
@@ -43,16 +43,14 @@ export class ValidationPipeline {
     }
 
     const validators: BaseValidator[] = [
+
       // Validações básicas de dados
+      new NameValidatorStrategy({ required: true, minLength: 2, maxLength: 50 }),
       new EmailValidatorStrategy({ required: true, allowedDomains: [] }),
       new PhoneValidatorStrategy({ required: true, allowedDDIs: ["55"], blockedDDIs: [] }),
-      new UsernameValidator(),
-
-      new PasswordValidator(),
-
-      // Validações específicas do LogTo
-      new LogtoPhoneValidator(),
-      new LogtoProfileValidator(),
+      new UsernameValidatorStrategy({ required: true, minLength: 6, maxLength: 20 }),
+      new PasswordValidatorStrategy({ minLength: 6, maxLength: 256 }),
+      new ProfileValidatorStrategy(),
 
       // Validação de duplicação no LogTo (se API estiver disponível)
       ...(this.logtoApi ? [new LogtoDuplicateValidator(this.logtoApi)] : []),
@@ -69,6 +67,7 @@ export class ValidationPipeline {
       errors: [],
       logs: [],
       validations: {
+        name: false,
         email: false,
         cpf: false,
         phone: false,

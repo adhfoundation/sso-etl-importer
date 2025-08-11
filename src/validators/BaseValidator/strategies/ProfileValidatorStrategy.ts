@@ -45,7 +45,7 @@ const profile = new Profile({
      : undefined,
 });
 
-    if (!profile.hasMinimum()) {
+    if (!profile.hasCompleteName() && profile.isEmpty()) {
       context.logs.push("Perfil mínimo não atendido");
       return;
     }
@@ -114,7 +114,9 @@ const profile = new Profile({
   private validateLocale(profile: Profile, context: ValidationContext): void {
     if (!profile.locale) return;
 
-    if (!profile.isValidLocale()) {
+    // Validação básica de locale (formato xx-XX)
+    const localeRegex = /^[a-z]{2}(-[A-Z]{2})?$/;
+    if (!localeRegex.test(profile.locale)) {
       context.logs.push(`Locale não padrão: ${profile.locale}`);
       return;
     }
@@ -124,7 +126,11 @@ const profile = new Profile({
   private validateZoneInfo(profile: Profile, context: ValidationContext): void {
     if (!profile.zoneinfo) return;
 
-    if (!profile.isValidZoneInfo()) {
+    // Validação básica de timezone
+    try {
+      Intl.DateTimeFormat(undefined, { timeZone: profile.zoneinfo });
+      context.logs.push("Zoneinfo válido");
+    } catch {
       context.errors.push(`Zoneinfo inválido: ${profile.zoneinfo}`);
       return;
     }
