@@ -1,7 +1,11 @@
 import { UserWithRelations } from "repositories/StgUserRepository";
 import { BaseValidator, ValidationContext } from "../BaseValidator";
+import { Username, UsernameOptions } from "domain/Username";
+
+export interface UsernameValidatorOptions extends UsernameOptions {}
 
 export class UsernameValidator extends BaseValidator {
+  private readonly options: UsernameValidatorOptions;
   private readonly messages = {
     missing: "Missing username",
     tooShort: "Username too short",
@@ -11,38 +15,41 @@ export class UsernameValidator extends BaseValidator {
     valid: "✅ Valid username",
   };
 
-  protected async handle(user: UserWithRelations, context: ValidationContext): Promise<void> {
-    const username = user.username;
+  constructor(options?: UsernameValidatorOptions) {
+    super();
+    this.options = {
+      required: true,
+      minLength: 3,
+      maxLength: 20,
+      ...options,
+    };
+  }
 
-    if (!username) {
+  protected async handle(user: UserWithRelations, context: ValidationContext): Promise<void> {
+    const usernameObj = new Username(user.username || "");
+
+    if (this.options.required && usernameObj.isEmpty()) {
       context.logs.push(this.messages.missing);
       return;
     }
 
-    if (username.length < 3) {
-      context.logs.push(this.messages.tooShort);
+    if (!usernameObj.isLengthValid(this.options.minLength, this.options.maxLength)) {
+      if (usernameObj.toString().length < (this.options.minLength ?? 0)) {
+        context.logs.push(this.messages.tooShort);
+      } else {
+        context.logs.push(this.messages.tooLong);
+      }
       return;
     }
 
-    if (username.length > 20) {
-      context.logs.push(this.messages.tooLong);
-      return;
-    }
-
-    // Username must start with a letter or underscore, followed by letters, digits, or underscores
-    const usernameRegex = /^[A-Z_a-z]\w*$/;
-
-    if (!usernameRegex.test(username)) {
-      context.logs.push(this.messages.invalidFormat(username));
+    if (!usernameObj.isFormatValid()) {
+      context.logs.push(this.messages.invalidFormat(usernameObj.toString()));
       user.username = null;
       return;
     }
 
-    // Check if username is in email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (emailRegex.test(username)) {
-      context.logs.push(this.messages.isEmail(username));
+    if (usernameObj.isEmailFormat()) {
+      context.logs.push(this.messages.isEmail(usernameObj.toString()));
       user.username = null;
       return;
     }
