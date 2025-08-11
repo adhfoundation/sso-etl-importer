@@ -8,16 +8,18 @@ datasource db {
 }
 
 model stg_user {
-  id              Int              @id @default(autoincrement())
-  primary_email   String?
-  username        String?
-  password        String?
-  name            String?
-  cpf             String?          @db.VarChar(255)
-  created_at      DateTime         @default(now())
-  stg_import_logs stg_import_log[]
-  stg_phone       stg_phone[]
-  stg_profile     stg_profile?
+  id                Int              @id @default(autoincrement())
+  primary_email     String?
+  username          String?
+  password          String?
+  password_digest   String?          @db.VarChar(256)
+  password_algorithm String?
+  name              String?
+  cpf               String?          @db.VarChar(255)
+  created_at        DateTime         @default(now())
+  stg_import_logs   stg_import_log[]
+  stg_phone         stg_phone[]
+  stg_profile       stg_profile?
 }
 
 model stg_profile {
