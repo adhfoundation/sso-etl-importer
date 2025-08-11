@@ -35,7 +35,9 @@ export function csvDefaultMapper(row: Record<string, string>): UserLogtoPostPayl
     primaryPhone: phone || undefined,
     primaryEmail: email || undefined,
     username: username || undefined,
-    password: '', // pode ser uma hash
+    password: '',
+    passwordAlgorithm: '',
+    passwordDigest: '',
     name: fullName || undefined,
     cpf: cpf || undefined,
     profile: {

@@ -48,6 +48,8 @@ export class UserImporter {
           const userCreated = await this.repository.create({
             username: user.username,
             password: user.password || "",
+            password_algorithm: user.passwordAlgorithm || "",
+            password_digest: user.passwordDigest || "",
             primary_email: user.primaryEmail,
             name: user.name,
             cpf: user.cpf,

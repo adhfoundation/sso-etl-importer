@@ -1,92 +1,73 @@
 import { RootObject } from "types/generated-types";
 import { UserLogtoPostPayload } from "types/UserLogtoPostPayload";
 
+// ============================
+// ✅ Função principal
+// ============================
 export function medcelAdminStudentsMapper(
   root: RootObject
 ): UserLogtoPostPayload {
+  // Nomes
   const firstName = root.firstName || "";
   const lastName = root.lastName || "";
-  const middleName: string = (root.personal?.middleName as string) || "";
-
+  const middleName = (root.personal?.middleName as string) || "";
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
 
+  // Dados de contato principais
   const phone = root.contact?.phones?.[root.contact?.mainPhone ?? 0];
   const email = root.contact?.emails?.[root.contact?.mainEmail ?? 0];
   const address = root.contact?.addresses?.[0] || {};
 
-  //custom
+  // Extras: arrays completos
   const addresses = root.contact?.addresses || [];
   const phones = root.contact?.phones || [];
 
+  // Documento
   const cpf =
     root.personal?.documents?.find((doc) => doc.documentType === "cpf")
       ?.number || null;
 
-  const addressValidation = (address: any) => {
-    const validateAddress = [
-      address.name,
-      address.number,
-      address.district,
-      address.city,
-      address.state,
-      address.postalCode,
-    ]
-      .filter((item) => !!item)
-      .join(" ");
-
-    const validateStreet = [address.name, address.number]
-      .filter((item) => !!item)
-      .join(" ");
-
-    const addressObject = {
-      formatted: asString(validateAddress || ""),
-      streetAddress: asString(validateStreet || ""),
-      locality: asString(address?.city || ""),
-      region: asString(address?.state || ""),
-      postalCode: asString(address?.postalCode || ""),
-      country: asString("BR"),
-    };
-
-    return addressObject;
-  };
+  // ============================
+  // 🔧 Montagem do payload
+  // ============================
   return {
     primaryPhone: normalizePhone([
       phone?.countryCode,
       phone?.prefix,
       phone?.number,
     ]),
+
     primaryEmail: (() => {
-      if (isValidEmail(root.account?.email)) {
-        return root.account.email;
-      }
-      if (isValidEmail(email?.name)) {
-        return email.name;
-      }
+      if (isValidEmail(root.account?.email)) return root.account.email;
+      if (isValidEmail(email?.name)) return email.name;
       return "";
     })(),
-    
+
     username: root.account?.username || "",
-    password: root.account?.password || "",
+    // -- removido para tratamento de senha no logTo
+    // password: root.account?.password || "",
+    passwordAlgorithm: "Bcrypt",
+    passwordDigest: root.account?.password || "",
+
     name: fullName,
     cpf,
+
     profile: {
       givenName: firstName,
       familyName: lastName,
-      middleName: middleName ?? "",
+      middleName: middleName,
       nickname: root.account?.username ?? "",
       preferredUsername: root.account?.username ?? "",
       gender: root.gender,
       birthdate: parseBirthDate(root.personal?.birthDate),
-      // profile: undefined,
       website: undefined,
       zoneinfo: "America/Sao_Paulo",
       locale: "pt-BR",
-      address: addressValidation(address),
 
-      //customs
-      addresses: addresses?.map((addr) => addressValidation(addr)),
-      ///
-      phones: phones?.map((phone) => ({
+      address: mapAddress(address),
+      addresses: addresses.map(mapAddress),
+
+      phones: phones.map((phone) => ({
         phone: normalizePhone([
           phone?.countryCode,
           phone?.prefix,
@@ -96,10 +77,13 @@ export function medcelAdminStudentsMapper(
         prefix: phone?.prefix,
         number: phone?.number,
       })),
-      ///
     },
   };
 }
+
+// ============================
+// 🔧 Helpers
+// ============================
 
 function parseBirthDate(birthDateObj?: {
   $date?: { $numberLong?: string };
@@ -123,4 +107,30 @@ function isValidEmail(email?: string): email is string {
 
 function asString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function mapAddress(address: any) {
+  const validateAddress = [
+    address.name,
+    address.number,
+    address.district,
+    address.city,
+    address.state,
+    address.postalCode,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const validateStreet = [address.name, address.number]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    formatted: asString(validateAddress || ""),
+    streetAddress: asString(validateStreet || ""),
+    locality: asString(address?.city || ""),
+    region: asString(address?.state || ""),
+    postalCode: asString(address?.postalCode || ""),
+    country: "BR",
+  };
 }
