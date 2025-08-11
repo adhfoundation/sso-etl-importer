@@ -33,7 +33,7 @@ export class ValidationPipeline {
     // Inicializar cliente LogTo para validações
     const apiUrl = process.env.LOGTO_ACCESS_API_URL || "";
     const accessToken = process.env.LOGTO_ACCESS_TOKEN || "";
-    
+
     if (apiUrl && accessToken) {
       const httpClient = new LogtoHttpClient(apiUrl, accessToken);
       this.logtoApi = new LogtoApi(httpClient);
@@ -47,16 +47,16 @@ export class ValidationPipeline {
       new EmailValidatorStrategy({ required: true, allowedDomains: [] }),
       new PhoneValidatorStrategy({ required: true, allowedDDIs: ["55"], blockedDDIs: [] }),
       new UsernameValidator(),
-      
+
       new PasswordValidator(),
-      
+
       // Validações específicas do LogTo
       new LogtoPhoneValidator(),
       new LogtoProfileValidator(),
-      
+
       // Validação de duplicação no LogTo (se API estiver disponível)
       ...(this.logtoApi ? [new LogtoDuplicateValidator(this.logtoApi)] : []),
-      
+
       // Validação final
       new ValidUserValidator(),
     ];
@@ -82,13 +82,15 @@ export class ValidationPipeline {
       await this.headValidator.validate(user, context);
     }
 
+    // -- Aplicar logs no banco!
+    console.log(context.logs.join("\n"))
     return context;
   }
 
   // Método para validar em lote (otimização)
   async runBatch(users: UserWithRelations[]): Promise<Map<number, ValidationContext>> {
     const results = new Map<number, ValidationContext>();
-    
+
     const validationPromises = users.map(async (user) => {
       const context = await this.run(user);
       results.set(user.id, context);
@@ -104,7 +106,7 @@ export class ValidationPipeline {
     invalid: Array<{ user: UserWithRelations; context: ValidationContext }>;
   }> {
     const validationResults = await this.runBatch(users);
-    
+
     const valid: UserWithRelations[] = [];
     const invalid: Array<{ user: UserWithRelations; context: ValidationContext }> = [];
 
@@ -129,10 +131,10 @@ export class ValidationPipeline {
     details: Array<{ userId: number; errors: string[]; logs: string[] }>;
   }> {
     const validationResults = await this.runBatch(users);
-    
+
     const errorsByType: Record<string, number> = {};
     const details: Array<{ userId: number; errors: string[]; logs: string[] }> = [];
-    
+
     let valid = 0;
     let invalid = 0;
 

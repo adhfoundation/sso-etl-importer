@@ -34,7 +34,13 @@ export class PhoneValidatorStrategy extends BaseValidator {
     user: UserWithRelations,
     context: ValidationContext
   ): Promise<void> {
-    const phone = new Phone(user.stg_phone[0].phone || "");
+    const phone = new Phone(user.stg_phone[0]?.phone || "");
+
+    if(!user.stg_phone[0]?.phone) {
+      context.validations.phone = false;
+      context.logs.push(this.messages.missingPhone);
+      return;
+    }
 
     if (!phone.isValid(this.options)) {
       if (this.options.required && phone.isEmpty()) {
