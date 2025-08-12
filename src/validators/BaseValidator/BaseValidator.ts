@@ -1,9 +1,11 @@
-export type UserWithRelations = any /* seu tipo usuário aqui */;
+import { UserWithRelations } from "repositories/StgUserRepository";
 
 export interface ValidationContext {
   errors: string[];
   logs: string[];
   validations: {
+    passport?: boolean;
+    name: boolean;
     email: boolean;
     cpf: boolean;
     phone: boolean;

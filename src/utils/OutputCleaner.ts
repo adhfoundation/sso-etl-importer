@@ -1,10 +1,5 @@
-import { exec as execCallback } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import os from 'os';
-import { promisify } from 'util';
-
-const exec = promisify(execCallback);
 
 export class OutputCleaner {
   private outputPath: string;
@@ -24,15 +19,23 @@ export class OutputCleaner {
   public async clean(): Promise<void> {
     await this.ensureOutputExists();
 
-    const isWindows = os.platform() === 'win32';
-    const command = isWindows
-      ? `powershell -Command "Remove-Item -Path '${this.outputPath}\\*' -Recurse -Force"`
-      : `rm -rf "${this.outputPath}/*" "${this.outputPath}/.*"`;
-
     console.log(`\n✅ Iniciando remoção de conteúdo em '${this.outputPath}'`);
 
     try {
-      await exec(command);
+      // Lê todos os arquivos e diretórios no diretório output
+      const items = await fs.readdir(this.outputPath, { withFileTypes: true });
+      
+      // Remove cada item individualmente
+      for (const item of items) {
+        const itemPath = path.join(this.outputPath, item.name);
+        
+        if (item.isDirectory()) {
+          await fs.rm(itemPath, { recursive: true, force: true });
+        } else {
+          await fs.unlink(itemPath);
+        }
+      }
+      
       console.log(`✅ Conteúdo de '${this.outputPath}' removido com sucesso.\n`);
     } catch (error) {
       console.error(`❌ Erro ao limpar diretório:`, error);

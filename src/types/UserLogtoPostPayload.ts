@@ -3,6 +3,8 @@ export type UserLogtoPostPayload = {
   primaryEmail: string;
   username: string;
   password?: string;
+  passwordAlgorithm?: string;
+  passwordDigest?: string;
   name: string;
   cpf?: string | null | undefined;
   profile: {
