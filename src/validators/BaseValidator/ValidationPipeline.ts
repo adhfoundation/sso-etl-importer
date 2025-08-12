@@ -11,6 +11,8 @@ import { ProfileValidatorStrategy } from "./strategies/ProfileValidatorStrategy"
 import { LogtoDuplicateValidator } from "./strategies/LogtoDuplicateValidator.strategy";
 import { PhoneValidatorStrategy } from "./strategies/PhoneValidator.strategy";
 import { NameValidatorStrategy } from "./strategies/NameValidatorStrategy";
+import { CpfValidatorStrategy } from "./strategies/CpfValidator.strategy";
+import { PassportValidatorStrategy } from "./strategies/PassportValidatorStrategy";
 
 // Novos validadores específicos para LogTo
 
@@ -51,6 +53,8 @@ export class ValidationPipeline {
       new UsernameValidatorStrategy({ required: true, minLength: 6, maxLength: 20 }),
       new PasswordValidatorStrategy({ minLength: 6, maxLength: 256 }),
       new ProfileValidatorStrategy(),
+      new CpfValidatorStrategy({ required: false }),
+      new PassportValidatorStrategy({ required: false, country: "BR" }),
 
       // Validação de duplicação no LogTo (se API estiver disponível)
       ...(this.logtoApi ? [new LogtoDuplicateValidator(this.logtoApi)] : []),
@@ -67,6 +71,7 @@ export class ValidationPipeline {
       errors: [],
       logs: [],
       validations: {
+        passport: false,
         name: false,
         email: false,
         cpf: false,

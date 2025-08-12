@@ -20,6 +20,6 @@
       "@services/*": ["services/*"]
     }
   },
-  "include": ["src/**/*", "apoio-local/JsonInitialProcessor.ts", "apoio-local/CsvInitialProcessor.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "apoio", "old"]
 }

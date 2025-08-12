@@ -51,6 +51,7 @@ const profile = new Profile({
     }
 
     if (profile.hasInvalidFields()) {
+      //pegar logs!
       context.logs.push("Perfil com campos inválidos");
       return;
     }

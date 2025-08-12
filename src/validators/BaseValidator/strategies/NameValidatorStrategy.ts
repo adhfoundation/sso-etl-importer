@@ -1,4 +1,3 @@
-// validators/NameValidatorStrategy.ts
 import { UserWithRelations } from "repositories/StgUserRepository";
 import { BaseValidator, ValidationContext } from "../BaseValidator";
 import { Name } from "domain/Name";
@@ -7,7 +6,8 @@ export interface NameValidatorOptions {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
-  pattern?: RegExp;
+  allowNumbers?: boolean;
+  allowSpecialChars?: boolean;
 }
 
 export class NameValidatorStrategy extends BaseValidator {
@@ -22,11 +22,13 @@ export class NameValidatorStrategy extends BaseValidator {
 
   constructor(options?: NameValidatorOptions) {
     super();
+
     this.options = {
       required: true,
       minLength: 2,
       maxLength: 50,
-      pattern: /^[a-zA-Z\s\-]+$/,
+      allowNumbers: false,
+      allowSpecialChars: true,
       ...options,
     };
 
@@ -40,26 +42,27 @@ export class NameValidatorStrategy extends BaseValidator {
   }
 
   protected async handle(user: UserWithRelations, context: ValidationContext): Promise<void> {
-    // Exemplo: validar given_name
     const rawName = user.stg_profile?.given_name || "";
     const name = new Name(rawName);
 
+    // Check empty when required
     if (this.options.required && name.isEmpty()) {
       context.logs.push(this.messages.missingName);
       return;
     }
 
-    if (name.length() < this.options.minLength) {
-      context.logs.push(this.messages.tooShort(this.options.minLength));
+    // Check min and max length
+    if (!name.isValidLength(this.options.minLength, this.options.maxLength)) {
+      if (name.length() < this.options.minLength) {
+        context.logs.push(this.messages.tooShort(this.options.minLength));
+      } else {
+        context.logs.push(this.messages.tooLong(this.options.maxLength));
+      }
       return;
     }
 
-    if (name.length() > this.options.maxLength) {
-      context.logs.push(this.messages.tooLong(this.options.maxLength));
-      return;
-    }
-
-    if (this.options.pattern && !this.options.pattern.test(name.getValue())) {
+    // Check format/characters
+    if (!name.hasValidCharacters(this.options.allowNumbers, this.options.allowSpecialChars)) {
       context.logs.push(this.messages.invalidFormat(name.getValue()));
       return;
     }

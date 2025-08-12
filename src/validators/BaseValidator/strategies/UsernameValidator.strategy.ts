@@ -11,7 +11,7 @@ export class UsernameValidatorStrategy extends BaseValidator {
     tooShort: "Username too short",
     tooLong: "Username too long",
     invalidFormat: (username: string) => `Invalid username format: "${username}"`,
-    isEmail: (username: string) => `Username must not be an email: "${username}"`,
+    isEmail: (username: string) => `Username must not be an email: "${username} - removed"`,
     valid: "✅ Valid username",
   };
 

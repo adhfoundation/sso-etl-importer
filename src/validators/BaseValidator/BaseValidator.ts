@@ -4,6 +4,7 @@ export interface ValidationContext {
   errors: string[];
   logs: string[];
   validations: {
+    passport?: boolean;
     name: boolean;
     email: boolean;
     cpf: boolean;
